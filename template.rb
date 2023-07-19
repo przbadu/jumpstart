@@ -93,7 +93,7 @@ end
 
 def add_javascript
   run 'yarn add local-time esbuild-rails trix @hotwired/stimulus @hotwired/turbo-rails @rails/activestorage @rails/ujs @rails/request.js chokidar'
-  run 'yarn add -D daisyui@latest'
+  run 'yarn add -D daisyui@latest @tailwindcss/forms @tailwindcss/aspect-ratio @tailwindcss/typography @tailwindcss/container-queries'
 end
 
 def copy_templates
