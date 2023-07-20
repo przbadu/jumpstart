@@ -1,5 +1,5 @@
-require "fileutils"
-require "shellwords"
+require 'fileutils'
+require 'shellwords'
 
 # Copied from: https://github.com/mattbrictson/rails-template
 # Add this template directory to source_paths so that Thor actions like
@@ -8,14 +8,14 @@ require "shellwords"
 # In that case, use `git clone` to download them to a local temporary dir.
 def add_template_repository_to_source_path
   if __FILE__ =~ %r{\Ahttps?://}
-    require "tmpdir"
-    source_paths.unshift(tempdir = Dir.mktmpdir("jumpstart-"))
+    require 'tmpdir'
+    source_paths.unshift(tempdir = Dir.mktmpdir('jumpstart-'))
     at_exit { FileUtils.remove_entry(tempdir) }
     git clone: [
-      "--quiet",
-      "https://github.com/excid3/jumpstart.git",
+      '--quiet',
+      'https://github.com/przbadu/jumpstart.git',
       tempdir
-    ].map(&:shellescape).join(" ")
+    ].map(&:shellescape).join(' ')
 
     if (branch = __FILE__[%r{jumpstart/(.+)/template.rb}, 1])
       Dir.chdir(tempdir) { git checkout: branch }
@@ -30,11 +30,12 @@ def rails_version
 end
 
 def rails_6_or_newer?
-  Gem::Requirement.new(">= 6.0.0.alpha").satisfied_by? rails_version
+  Gem::Requirement.new('>= 6.0.0.alpha').satisfied_by? rails_version
 end
 
 def add_gems
   add_gem 'cssbundling-rails'
+  add_gem 'tailwindcss-rails'
   add_gem 'devise', '~> 4.9'
   add_gem 'friendly_id', '~> 5.4'
   add_gem 'jsbundling-rails'
@@ -54,30 +55,28 @@ end
 
 def set_application_name
   # Add Application Name to Config
-  environment "config.application_name = Rails.application.class.module_parent_name"
+  environment 'config.application_name = Rails.application.class.module_parent_name'
 
   # Announce the user where they can change the application name in the future.
-  puts "You can change application name inside: ./config/application.rb"
+  puts 'You can change application name inside: ./config/application.rb'
 end
 
 def add_users
   route "root to: 'home#index'"
-  generate "devise:install"
+  generate 'devise:install'
 
   environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }", env: 'development'
-  generate :devise, "User", "first_name", "last_name", "announcements_last_read_at:datetime", "admin:boolean"
+  generate :devise, 'User', 'first_name', 'last_name', 'announcements_last_read_at:datetime', 'admin:boolean'
 
   # Set admin default to false
   in_root do
-    migration = Dir.glob("db/migrate/*").max_by{ |f| File.mtime(f) }
-    gsub_file migration, /:admin/, ":admin, default: false"
+    migration = Dir.glob('db/migrate/*').max_by { |f| File.mtime(f) }
+    gsub_file migration, /:admin/, ':admin, default: false'
   end
 
-  if Gem::Requirement.new("> 5.2").satisfied_by? rails_version
-    gsub_file "config/initializers/devise.rb", /  # config.secret_key = .+/, "  config.secret_key = Rails.application.credentials.secret_key_base"
-  end
+  gsub_file 'config/initializers/devise.rb', /  # config.secret_key = .+/, '  config.secret_key = Rails.application.credentials.secret_key_base' if Gem::Requirement.new('> 5.2').satisfied_by? rails_version
 
-  inject_into_file("app/models/user.rb", "omniauthable, :", after: "devise :")
+  inject_into_file('app/models/user.rb', 'omniauthable, :', after: 'devise :')
 end
 
 def add_authorization
@@ -85,108 +84,112 @@ def add_authorization
 end
 
 def default_to_esbuild
-  return if options[:javascript] == "esbuild"
-  unless options[:skip_javascript]
-    @options = options.merge(javascript: "esbuild")
-  end
+  return if options[:javascript] == 'esbuild'
+
+  return if options[:skip_javascript]
+
+  @options = options.merge(javascript: 'esbuild')
 end
 
 def add_javascript
-  run "yarn add local-time esbuild-rails trix @hotwired/stimulus @hotwired/turbo-rails @rails/activestorage @rails/ujs @rails/request.js chokidar"
+  run 'yarn add local-time esbuild-rails trix @hotwired/stimulus @hotwired/turbo-rails @rails/activestorage @rails/ujs @rails/request.js chokidar'
+  run 'yarn add -D daisyui@latest @tailwindcss/forms @tailwindcss/aspect-ratio @tailwindcss/typography @tailwindcss/container-queries'
 end
 
 def copy_templates
-  remove_file "app/assets/stylesheets/application.css"
-  remove_file "app/javascript/application.js"
-  remove_file "app/javascript/controllers/index.js"
-  remove_file "Procfile.dev"
+  remove_file 'app/assets/stylesheets/application.css'
+  remove_file 'app/javascript/application.js'
+  remove_file 'app/javascript/controllers/index.js'
+  remove_file 'Procfile.dev'
+  remove_file 'config/tailwind.config.js'
 
-  copy_file "Procfile"
-  copy_file "Procfile.dev"
-  copy_file ".foreman"
-  copy_file "esbuild.config.mjs"
-  copy_file "app/javascript/application.js"
-  copy_file "app/javascript/controllers/index.js"
+  copy_file 'Procfile'
+  copy_file 'Procfile.dev'
+  copy_file '.foreman'
+  copy_file 'esbuild.config.mjs'
+  copy_file 'app/javascript/application.js'
+  copy_file 'app/javascript/controllers/index.js'
+  copy_file 'config/tailwind.config.js'
 
-  directory "app", force: true
-  directory "config", force: true
-  directory "lib", force: true
+  directory 'app', force: true
+  directory 'config', force: true
+  directory 'lib', force: true
 
   route "get '/terms', to: 'home#terms'"
   route "get '/privacy', to: 'home#privacy'"
 end
 
 def add_sidekiq
-  environment "config.active_job.queue_adapter = :sidekiq"
+  environment 'config.active_job.queue_adapter = :sidekiq'
 
-  insert_into_file "config/routes.rb",
-    "require 'sidekiq/web'\n\n",
-    before: "Rails.application.routes.draw do"
+  insert_into_file 'config/routes.rb',
+                   "require 'sidekiq/web'\n\n",
+                   before: 'Rails.application.routes.draw do'
 
   content = <<~RUBY
-                authenticate :user, lambda { |u| u.admin? } do
-                  mount Sidekiq::Web => '/sidekiq'
+    authenticate :user, lambda { |u| u.admin? } do
+      mount Sidekiq::Web => '/sidekiq'
 
-                  namespace :madmin do
-                    resources :impersonates do
-                      post :impersonate, on: :member
-                      post :stop_impersonating, on: :collection
-                    end
-                  end
-                end
-            RUBY
-  insert_into_file "config/routes.rb", "#{content}\n", after: "Rails.application.routes.draw do\n"
+      namespace :madmin do
+        resources :impersonates do
+          post :impersonate, on: :member
+          post :stop_impersonating, on: :collection
+        end
+      end
+    end
+  RUBY
+  insert_into_file 'config/routes.rb', "#{content}\n", after: "Rails.application.routes.draw do\n"
 end
 
 def add_announcements
-  generate "model Announcement published_at:datetime announcement_type name description:text"
-  route "resources :announcements, only: [:index]"
+  generate 'model Announcement published_at:datetime announcement_type name description:text'
+  route 'resources :announcements, only: [:index]'
 end
 
 def add_notifications
-  route "resources :notifications, only: [:index]"
+  route 'resources :notifications, only: [:index]'
 end
 
 def add_multiple_authentication
-  insert_into_file "config/routes.rb", ', controllers: { omniauth_callbacks: "users/omniauth_callbacks" }', after: "  devise_for :users"
+  insert_into_file 'config/routes.rb', ', controllers: { omniauth_callbacks: "users/omniauth_callbacks" }', after: '  devise_for :users'
 
-  generate "model Service user:references provider uid access_token access_token_secret refresh_token expires_at:datetime auth:text"
+  generate 'model Service user:references provider uid access_token access_token_secret refresh_token expires_at:datetime auth:text'
 
-  template = """
+  template = ''"
   env_creds = Rails.application.credentials[Rails.env.to_sym] || {}
   %i{ facebook twitter github }.each do |provider|
     if options = env_creds[provider]
       config.omniauth provider, options[:app_id], options[:app_secret], options.fetch(:options, {})
     end
   end
-  """.strip
+  "''.strip
 
-  insert_into_file "config/initializers/devise.rb", "  " + template + "\n\n", before: "  # ==> Warden configuration"
+  insert_into_file 'config/initializers/devise.rb', '  ' + template + "\n\n", before: '  # ==> Warden configuration'
 end
 
 def add_whenever
-  run "wheneverize ."
+  run 'wheneverize .'
 end
 
 def add_friendly_id
-  generate "friendly_id"
-  insert_into_file( Dir["db/migrate/**/*friendly_id_slugs.rb"].first, "[5.2]", after: "ActiveRecord::Migration")
+  generate 'friendly_id'
+  insert_into_file(Dir['db/migrate/**/*friendly_id_slugs.rb'].first, '[5.2]', after: 'ActiveRecord::Migration')
 end
 
 def add_sitemap
-  rails_command "sitemap:install"
+  rails_command 'sitemap:install'
 end
 
-def add_bootstrap
-  rails_command "css:install:bootstrap"
+def add_tailwindcss
+  rails_command 'tailwindcss:install'
 end
 
 def add_announcements_css
-  insert_into_file 'app/assets/stylesheets/application.bootstrap.scss', '@import "jumpstart/announcements";'
+  insert_into_file 'app/assets/stylesheets/application.tailwind.css', '@import "jumpstart/announcements";'
 end
 
 def add_esbuild_script
-  build_script = "node esbuild.config.mjs"
+  build_script = 'node esbuild.config.mjs'
 
   case `npx -v`.to_f
   when 7.1...8.0
@@ -205,12 +208,10 @@ def add_gem(name, *options)
 end
 
 def gem_exists?(name)
-  IO.read("Gemfile") =~ /^\s*gem ['"]#{name}['"]/
+  IO.read('Gemfile') =~ /^\s*gem ['"]#{name}['"]/
 end
 
-unless rails_6_or_newer?
-  puts "Please use Rails 6.0 or newer to create a Jumpstart application"
-end
+puts 'Please use Rails 6.0 or newer to create a Jumpstart application' unless rails_6_or_newer?
 
 # Main setup
 add_template_repository_to_source_path
@@ -227,23 +228,23 @@ after_bundle do
   add_multiple_authentication
   add_sidekiq
   add_friendly_id
-  add_bootstrap
+  add_tailwindcss
   add_whenever
   add_sitemap
   add_announcements_css
-  rails_command "active_storage:install"
+  rails_command 'active_storage:install'
 
   # Make sure Linux is in the Gemfile.lock for deploying
-  run "bundle lock --add-platform x86_64-linux"
+  run 'bundle lock --add-platform x86_64-linux'
 
   copy_templates
 
   add_esbuild_script
 
   # Commit everything to git
-  unless ENV["SKIP_GIT"]
+  unless ENV['SKIP_GIT']
     git :init
-    git add: "."
+    git add: '.'
     # git commit will fail if user.email is not configured
     begin
       git commit: %( -m 'Initial commit' )
@@ -253,17 +254,17 @@ after_bundle do
   end
 
   say
-  say "Jumpstart app successfully created!", :blue
+  say 'Jumpstart app successfully created!', :blue
   say
-  say "To get started with your new app:", :green
+  say 'To get started with your new app:', :green
   say "  cd #{original_app_name}"
   say
-  say "  # Update config/database.yml with your database credentials"
+  say '  # Update config/database.yml with your database credentials'
   say
-  say "  rails db:create"
-  say "  rails g noticed:model"
-  say "  rails db:migrate"
-  say "  rails g madmin:install # Generate admin dashboards"
-  say "  gem install foreman"
-  say "  bin/dev"
+  say '  rails db:create'
+  say '  rails g noticed:model'
+  say '  rails db:migrate'
+  say '  rails g madmin:install # Generate admin dashboards'
+  say '  gem install foreman'
+  say '  bin/dev'
 end
