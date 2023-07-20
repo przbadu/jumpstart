@@ -1,4 +1,4 @@
-👉 We've also built [Jumpstart Pro](https://jumpstartrails.com) which is a version of Jumpstart that includes payments with Stripe & Braintree, team accounts, TailwindCSS, and much more.
+This Jumpstart is a fork of [Jumpstart](https://github.com/excid3/jumpstart)
 
 # Jumpstart Rails Template
 
@@ -28,7 +28,7 @@ You'll need the following installed to run the template successfully:
 #### Creating a new app
 
 ```bash
-rails new myapp -d postgresql -m https://raw.githubusercontent.com/excid3/jumpstart/master/template.rb
+rails new myapp -d postgresql -m https://raw.githubusercontent.com/przbadu/jumpstart/master/template.rb
 ```
 
 Or if you have downloaded this repo, you can reference template.rb locally:
