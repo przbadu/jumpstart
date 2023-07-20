@@ -1,6 +1,6 @@
 <div class="card w-1/2 m-auto bg-base-100 shadow-xl">
   <div class="card-body w-full m-auto">
-    <h2 class="text-center">Reset your password</h2>
+    <h2 class="text-center text-2xl">Reset your password</h2>
     <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
       <p class="text-center">Enter your email address below and we will send you a link to reset your password.</p>

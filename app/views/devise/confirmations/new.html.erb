@@ -1,6 +1,6 @@
 <div class="card w-1/2 m-auto bg-base-100 shadow-xl">
   <div class="card-body w-full m-auto">
-    <h2 class="text-center">Resend confirmation instructions</h2>
+    <h2 class="text-center text-2xl">Resend confirmation instructions</h2>
 
     <%= form_for(resource, as: resource_name, url: confirmation_path(resource_name), html: { method: :post }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
