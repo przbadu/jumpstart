@@ -1,3 +1,8 @@
+### 2023-07-19
+
+* Support for [Tailwind css](https://tailwindcss.com) with [DaisyUI](https://daisyui.com)
+* Updated all devise templates to use tailwind css
+
 ### 2021-12-27
 
 * Support Rails 7.0
